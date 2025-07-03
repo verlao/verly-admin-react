@@ -1,0 +1,1 @@
+export const apiUrl = 'https://verly-service-production.up.railway.app/verly-service';
