@@ -15,7 +15,7 @@ import "bootstrap/dist/css/bootstrap.css";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/verly-admin-react">
       <Nav />
       <div className="mx-4">
         <Routes>
