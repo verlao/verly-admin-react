@@ -19,7 +19,7 @@ export default function Nav() {
     return (
         <nav className="navbar navbar-expand navbar-dark bg-dark">
             <div className="navbar-nav">
-                <NavLink href="/" exact className="nav-item nav-link">Inicio</NavLink>
+                <NavLink href="/leads" exact className="nav-item nav-link">Inicio</NavLink>
                 <NavLink href="/customers" className="nav-item nav-link">Clientes</NavLink>
                 <NavLink href="/products" className="nav-item nav-link">Produtos</NavLink>
                 <NavLink href="/costs" className="nav-item nav-link">Custos</NavLink>

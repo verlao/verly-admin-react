@@ -27,8 +27,16 @@ function CashFlow() {
     const isLoggedIn = user && user.accessToken
 
     useEffect(() => {
-        if (!isLoggedIn)
-            navigate('/account/login')
+        if (!isLoggedIn) {
+            navigate('/', { replace: true });
+            if (
+                window.location.hostname === 'localhost' &&
+                window.location.pathname === '/verly-admin-react'
+            ) {
+                window.location.replace('/verly-admin-react/');
+            }
+            return;
+        }
 
         cashFlowService.getAll().then(x => {
             if (x) {
@@ -38,6 +46,10 @@ function CashFlow() {
             }
         });
     }, [isLoggedIn, navigate]);
+
+    if (!isLoggedIn) {
+        return null;
+    }
 
     const showFeedbackModal = (title, message, variant = 'success') => {
         setModalConfig({ title, message, variant });

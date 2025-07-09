@@ -13,7 +13,7 @@ function Home() {
     useEffect(() => {
         userService.checkAuthOnLoad();
         if (!isLoggedIn) {
-            navigate('/account/login');
+            navigate(`${import.meta.env.BASE_URL}account/login`);
             return;
         }
 

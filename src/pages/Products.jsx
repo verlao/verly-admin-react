@@ -4,6 +4,7 @@ import Select from 'react-select'
 import { customerService, userService, productService } from '../../services'
 import { productCostService } from '../../services/product-cost.service'
 import {Popover,OverlayTrigger,Button} from 'react-bootstrap'
+import { useNavigate } from 'react-router-dom';
 
 export default Products;
 
@@ -15,6 +16,11 @@ function Products() {
     const [loading, setLoading] = useState(true);
     const user = userService?.userValue
     const isLoggedIn = user?.accessToken
+    const navigate = useNavigate();
+
+    if (!isLoggedIn) {
+        return null;
+    }
 
     const productTypeOptions = [
         { value: 'BOX', label: 'Box' },
@@ -29,13 +35,21 @@ function Products() {
     ]
 
     useEffect(() => {
-        if(isLoggedIn){
-            setLoading(true);
-            productService.getAll().then(x => setProducts(x)).finally(() => setLoading(false));
-            setProductType(productTypeOptions[0].value);
-            setProductColor(productColorOptions[0].value);
+        if (!isLoggedIn) {
+            navigate('/', { replace: true });
+            if (
+                window.location.hostname === 'localhost' &&
+                window.location.pathname === '/verly-admin-react'
+            ) {
+                window.location.replace('/verly-admin-react/');
+            }
+            return;
         }
-    }, []);
+        setLoading(true);
+        productService.getAll().then(x => setProducts(x)).finally(() => setLoading(false));
+        setProductType(productTypeOptions[0].value);
+        setProductColor(productColorOptions[0].value);
+    }, [isLoggedIn, navigate]);
 
     function handleProductTypeChange(e) {
         setProductType(e.value);

@@ -1,16 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link } from '../../components';
+import { useNavigate } from 'react-router-dom';
 import { customerService, userService } from '../../services';
 
 export default function Customers() {
     const [customers, setCustomers] = useState(null)
     const user = userService?.userValue
     const isLoggedIn = user && user.accessToken
+    const navigate = useNavigate();
     
     useEffect(() => {
-        if(isLoggedIn)
-            customerService.getAll().then(x => setCustomers(x))
-    }, []);
+        if (!isLoggedIn) {
+            navigate('/', { replace: true });
+            if (
+                window.location.hostname === 'localhost' &&
+                window.location.pathname === '/verly-admin-react'
+            ) {
+                window.location.replace('/verly-admin-react/');
+            }
+            return;
+        }
+        customerService.getAll().then(x => setCustomers(x))
+    }, [isLoggedIn, navigate]);
+
+    if (!isLoggedIn) {
+        return null;
+    }
 
     function deleteUser(id) {
         if (!window.confirm('Você realmente quer excluir esse cliente?')) return;

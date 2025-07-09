@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Nav from "../components/Nav";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -13,13 +13,16 @@ import Login from "./pages/Login";
 import "../styles/globals.css";
 import "bootstrap/dist/css/bootstrap.css";
 
-function App() {
+function AppRoutes() {
+  const location = useLocation();
+  const hideNav = location.pathname === "/" || location.pathname === "/account/login";
   return (
-    <BrowserRouter basename="/verly-admin-react">
-      <Nav />
+    <>
+      {!hideNav && <Nav />}
       <div className="mx-4">
         <Routes>
-          <Route path="/" element={<Navigate to="/account/login" replace />} />
+          <Route path="/" element={<Login />} />
+          <Route path="/leads" element={<Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/add" element={<AddProduct />} />
           <Route path="/products/edit/:id" element={<EditProduct />} />
@@ -28,9 +31,16 @@ function App() {
           <Route path="/customers/edit/:id" element={<EditCustomer />} />
           <Route path="/cash-flow" element={<CashFlow />} />
           <Route path="/costs" element={<Costs />} />
-          <Route path="/account/login" element={<Login />} />
         </Routes>
       </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter basename="/verly-admin-react">
+      <AppRoutes />
     </BrowserRouter>
   );
 }
