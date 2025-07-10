@@ -56,7 +56,7 @@ function logout() {
     localStorage.removeItem('user');
     sessionStorage.removeItem('user');
     userSubject.next(null);
-    window.location.href = import.meta.env.BASE_URL;
+    window.location.href = '/';
 }
 
 function checkAuthOnLoad() {

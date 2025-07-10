@@ -10,13 +10,7 @@ export default function Customers() {
     useEffect(() => {
         userService.checkAuthOnLoad && userService.checkAuthOnLoad();
         if (!userService.isAuthenticated) {
-            navigate('/', { replace: true });
-            if (
-                window.location.hostname === 'localhost' &&
-                window.location.pathname === '/verly-admin-react'
-            ) {
-                window.location.replace('/verly-admin-react/');
-            }
+            navigate('/');
             return;
         }
         customerService.getAll().then(x => setCustomers(x))

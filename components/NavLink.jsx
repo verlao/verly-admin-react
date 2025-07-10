@@ -14,7 +14,7 @@ NavLink.defaultProps = {
 
 function NavLink({ children, href, exact, ...props }) {
     const { pathname } = useLocation();
-    const base = import.meta.env.BASE_URL || '/verly-admin-react/';
+    const base = import.meta.env.BASE_URL || '/';
     let fullHref;
 
     if (href.startsWith(base)) {
