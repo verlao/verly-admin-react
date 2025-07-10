@@ -10,14 +10,5 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Redireciona para a barra final se estiver faltando
-      if (
-        window.location.pathname === '/verly-admin-react' &&
-        !window.location.pathname.endsWith('/')
-      ) {
-        window.location.replace(window.location.pathname + '/' + window.location.search + window.location.hash);
-      }
-    </script>
   </body>
 </html>
