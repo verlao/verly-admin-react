@@ -33,8 +33,19 @@ function _delete(id) {
 }
 
 function getAddressByCep(cep){
-    if(cep.replace("_","").length == 8){
-        return fetchWrapper.get(`https://viacep.com.br/ws/${cep}/json/`)    
+    const cleanCep = cep.replace(/[^0-9]/g, '');
+    if(cleanCep.length === 8){
+        return fetchWrapper.get(`https://viacep.com.br/ws/${cleanCep}/json/`)
+            .then(response => {
+                if (response.erro) {
+                    throw new Error('CEP não encontrado');
+                }
+                return response;
+            })
+            .catch(error => {
+                console.error('Erro na busca do CEP:', error);
+                throw error;
+            });
     }
-    return {}
+    return Promise.reject(new Error('CEP deve ter 8 dígitos'));
 }

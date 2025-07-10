@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -7,12 +7,22 @@ import { userService } from '../../services/user.service';
 
 export default function Login() {
     const navigate = useNavigate();
+    const [apiErrorMessage, setApiErrorMessage] = useState(null);
+    const errorTimeoutRef = useRef(null);
 
     useEffect(() => {
         if (userService.isAuthenticated) {
             navigate('/leads', { replace: true });
         }
     }, [navigate]);
+
+    useEffect(() => {
+        return () => {
+            if (errorTimeoutRef.current) {
+                clearTimeout(errorTimeoutRef.current);
+            }
+        };
+    }, []);
 
     if (userService.isAuthenticated) {
         return null;
@@ -32,6 +42,13 @@ export default function Login() {
                 navigate('/leads', { replace: true });
             }).catch(error => {
                 setError('apiError', { message: error.message || error });
+                setApiErrorMessage(error.message || error);
+                if (errorTimeoutRef.current) {
+                    clearTimeout(errorTimeoutRef.current);
+                }
+                errorTimeoutRef.current = setTimeout(() => {
+                    setApiErrorMessage(null);
+                }, 10000); // 10 segundos
             });
     }
 
@@ -49,8 +66,8 @@ export default function Login() {
                     <input name="password" type="password" {...register('password')} className={`form-control ${errors.password ? 'is-invalid' : ''}`} />
                     <div className="invalid-feedback">{errors.password?.message}</div>
                 </div>
-                {errors.apiError && (
-                    <div className="alert alert-danger mt-2">{errors.apiError.message}</div>
+                {(apiErrorMessage || errors.apiError) && (
+                    <div className="alert alert-danger mt-2">{apiErrorMessage || errors.apiError?.message}</div>
                 )}
                 <button disabled={formState.isSubmitting} className="btn btn-primary my-2 w-100">
                     {formState.isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}

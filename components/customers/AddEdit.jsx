@@ -6,6 +6,7 @@ import React from "react";
 import { IMaskInput } from "react-imask";
 import { Link } from "../../components";
 import { customerService, alertService } from "../../services";
+import { useNavigate } from "react-router-dom";
 
 React.useLayoutEffect = React.useEffect;
 
@@ -14,6 +15,7 @@ export { AddEdit };
 function AddEdit(props) {
   const savedCustomer = props?.customer;
   const isAddMode = props.customer ? false : true;
+  const navigate = useNavigate();
   // form validation rules
   const validationSchema = Yup.object().shape({
     name: Yup.string().required("Nome precisa ser preenchido."),
@@ -36,28 +38,47 @@ function AddEdit(props) {
   const { register, setValue, getValues, handleSubmit, reset, formState } = useForm(formOptions);
   const { errors } = formState;
   const [customer, setCustomer] = useState({})
+  const [isLoadingCep, setIsLoadingCep] = useState(false)
 
   function onSubmit(data) {
     return isAddMode ? createUser(data) : updateUser(savedCustomer.id, data);
   }
 
   async function findAddress(cep) {
-    const address = await customerService.getAddressByCep(cep.replace("-", ""));
-    setValue('address.logradouro', address.logradouro)
-    setValue('address.complemento', address.complemento);
-    setValue('address.bairro', address.bairro);
-    setValue('address.localidade', address.localidade);
-    return address;
+    if (!cep || cep.replace(/[^0-9]/g, '').length !== 8) {
+      return;
+    }
+
+    setIsLoadingCep(true);
+    try {
+      const cleanCep = cep.replace(/[^0-9]/g, '');
+      const address = await customerService.getAddressByCep(cleanCep);
+      
+      if (address && address.erro !== true) {
+        setValue('address.logradouro', address.logradouro || '');
+        setValue('address.complemento', address.complemento || '');
+        setValue('address.bairro', address.bairro || '');
+        setValue('address.localidade', address.localidade || '');
+        alertService.success('Endereço encontrado!');
+      } else {
+        alertService.error('CEP não encontrado. Verifique se o CEP está correto.');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      alertService.error('Erro ao buscar CEP. Tente novamente.');
+    } finally {
+      setIsLoadingCep(false);
+    }
   }
   async function createUser(data) {
     try {
-      data.cpf = data.cpf.replace(".", "");
-      data.phone.one = data.phone.one.replace("(", "").replace(")", "").replace("-", "").replace("_", "");
-      data.phone.two = data.phone.two.replace("(", "").replace(")", "").replace("-", "").replace("_", "");
+      data.cpf = data.cpf.replace(/[^0-9]/g, "");
+      data.phone.one = data.phone.one.replace(/[^0-9]/g, "");
+      data.phone.two = data.phone.two.replace(/[^0-9]/g, "");
       await customerService.create(data);
       reset();
       alertService.success("Cliente adicionado", { keepAfterRouteChange: true });
-      window.location.href = "/customers";
+      navigate("/customers");
     } catch (message_2) {
       return console.error(message_2);
     }
@@ -69,28 +90,41 @@ function AddEdit(props) {
       .then(() => {
         reset();
         alertService.success("Cliente editado", { keepAfterRouteChange: true });
-        window.location.href = "/customers";
+        navigate("/customers");
       })
       .catch(alertService.error);
   }
 
 
   useEffect(() => {
-    if (!isAddMode) {
-      customerService.getById(props.customer.id).then(customer => {
-        setValue('name', customer.name)
-        setValue('cpf', customer.cpf)
-        setValue('address.cep', customer.address.cep)
-        setValue('address.logradouro', customer.address.logradouro)
-        setValue('address.complemento', customer.address.complemento)
-        setValue('address.bairro', customer.address.bairro)
-        setValue('address.localidade', customer.address.localidade)
-        setValue('phone.one', customer.phone.one)
-        setValue('phone.two', customer.phone.two)
-        setCustomer(customer);
-      });
+    if (!isAddMode && props.customer) {
+      // Formatar CPF para exibição
+      const formattedCpf = props.customer.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      
+      // Formatar telefones para exibição
+      const formatPhone = (phone) => {
+        if (!phone) return '';
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length === 11) {
+          return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1)$2-$3');
+        }
+        return phone;
+      };
+
+      setValue('name', props.customer.name || '');
+      setValue('cpf', formattedCpf);
+      setValue('address.cep', props.customer.address?.cep || '');
+      setValue('address.logradouro', props.customer.address?.logradouro || '');
+      setValue('address.complemento', props.customer.address?.complemento || '');
+      setValue('address.bairro', props.customer.address?.bairro || '');
+      setValue('address.localidade', props.customer.address?.localidade || '');
+      setValue('address.number', props.customer.address?.number || '');
+      setValue('address.reference', props.customer.address?.reference || '');
+      setValue('phone.one', formatPhone(props.customer.phone?.one));
+      setValue('phone.two', formatPhone(props.customer.phone?.two));
+      setCustomer(props.customer);
     }
-  }, []);
+  }, [isAddMode, props.customer, setValue]);
 
   return (
     <div className="container py-4">
@@ -147,15 +181,25 @@ function AddEdit(props) {
             </div>
             <div className="col-12 col-md-6">
               <label>Cep</label>
-              <IMaskInput
-                mask="00000-000"
-                name="cep"
-                type="text"
-                autoComplete="disabled"
-                onBlurCapture={() => findAddress(getValues("address.cep"))}
-                {...register("address.cep")}
-                className={`form-control form-control-lg ${errors.cep ? "is-invalid" : ""}`}
-              />
+              <div className="position-relative">
+                <IMaskInput
+                  mask="00000-000"
+                  name="cep"
+                  type="text"
+                  autoComplete="disabled"
+                  onBlurCapture={() => findAddress(getValues("address.cep"))}
+                  onComplete={(value) => findAddress(value)}
+                  {...register("address.cep")}
+                  className={`form-control form-control-lg ${errors.cep ? "is-invalid" : ""}`}
+                />
+                {isLoadingCep && (
+                  <div className="position-absolute top-50 end-0 translate-middle-y pe-3">
+                    <div className="spinner-border spinner-border-sm text-primary" role="status">
+                      <span className="visually-hidden">Carregando...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="invalid-feedback">{errors.cep?.message}</div>
             </div>
             <div className="col-12">

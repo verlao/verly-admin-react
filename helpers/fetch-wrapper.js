@@ -66,13 +66,17 @@ async function handleResponse(response) {
         // If response is not JSON, create an error object
         const error = new Error('Resposta inválida do servidor');
         error.status = response.status;
-        userService.logout(); // Redireciona para login em qualquer erro
+        if (response.status === 401 || response.status === 403) {
+            userService.logout();
+        }
         throw error;
     }
 
-    // Redireciona para login em qualquer erro (!response.ok)
+    // Redireciona para login apenas em erro de autenticação
     if (!response.ok) {
-        userService.logout();
+        if (response.status === 401 || response.status === 403) {
+            userService.logout();
+        }
         const error = new Error(data?.message || response.statusText || 'Erro na requisição');
         error.status = response.status;
         error.data = data;

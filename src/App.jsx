@@ -39,7 +39,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter basename="/verly-admin-react">
+    <BrowserRouter>
       <AppRoutes />
     </BrowserRouter>
   );

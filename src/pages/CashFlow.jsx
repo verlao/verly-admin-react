@@ -23,11 +23,10 @@ function CashFlow() {
         variant: 'success'
     });
     const navigate = useNavigate();
-    const user = userService?.userValue
-    const isLoggedIn = user && user.accessToken
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        userService.checkAuthOnLoad && userService.checkAuthOnLoad();
+        if (!userService.isAuthenticated) {
             navigate('/', { replace: true });
             if (
                 window.location.hostname === 'localhost' &&
@@ -45,9 +44,9 @@ function CashFlow() {
                 setCashFlowData({ cashList: [] });
             }
         });
-    }, [isLoggedIn, navigate]);
+    }, [navigate]);
 
-    if (!isLoggedIn) {
+    if (!userService.isAuthenticated) {
         return null;
     }
 
@@ -62,7 +61,7 @@ function CashFlow() {
             return;
         }
         try {
-            const userPerson = user?.name || '';
+            const userPerson = userService?.userValue?.name || '';
             const data = {
                 ...form,
                 type: 'ENTRADA',
@@ -85,7 +84,7 @@ function CashFlow() {
             return;
         }
         try {
-            const userPerson = user?.name || '';
+            const userPerson = userService?.userValue?.name || '';
             const data = {
                 ...form,
                 type: 'SAIDA',

@@ -14,11 +14,27 @@ function Products() {
     const [productType, setProductType] = useState({});
     const [productColor, setProductColor] = useState({});
     const [loading, setLoading] = useState(true);
-    const user = userService?.userValue
-    const isLoggedIn = user?.accessToken
     const navigate = useNavigate();
 
-    if (!isLoggedIn) {
+    useEffect(() => {
+        userService.checkAuthOnLoad && userService.checkAuthOnLoad();
+        if (!userService.isAuthenticated) {
+            navigate('/', { replace: true });
+            if (
+                window.location.hostname === 'localhost' &&
+                window.location.pathname === '/verly-admin-react'
+            ) {
+                window.location.replace('/verly-admin-react/');
+            }
+            return;
+        }
+        setLoading(true);
+        productService.getAll().then(x => setProducts(x)).finally(() => setLoading(false));
+        setProductType(productTypeOptions[0].value);
+        setProductColor(productColorOptions[0].value);
+    }, [navigate]);
+
+    if (!userService.isAuthenticated) {
         return null;
     }
 
@@ -33,23 +49,6 @@ function Products() {
         { value: 'VERDE', label: 'Verde' },
         { value: 'FUME', label: 'Fumê' }
     ]
-
-    useEffect(() => {
-        if (!isLoggedIn) {
-            navigate('/', { replace: true });
-            if (
-                window.location.hostname === 'localhost' &&
-                window.location.pathname === '/verly-admin-react'
-            ) {
-                window.location.replace('/verly-admin-react/');
-            }
-            return;
-        }
-        setLoading(true);
-        productService.getAll().then(x => setProducts(x)).finally(() => setLoading(false));
-        setProductType(productTypeOptions[0].value);
-        setProductColor(productColorOptions[0].value);
-    }, [isLoggedIn, navigate]);
 
     function handleProductTypeChange(e) {
         setProductType(e.value);

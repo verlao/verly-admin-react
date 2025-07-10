@@ -4,6 +4,7 @@ import Select from 'react-select'
 import { customerService, userService, productService } from '../../services'
 import { productCostService } from '../../services/product-cost.service'
 import {Popover,OverlayTrigger,Button, Modal} from 'react-bootstrap'
+import { useNavigate } from 'react-router-dom';
 
 const productTypeOptions = [
     { value: 'BOX', label: 'Box' },
@@ -24,18 +25,23 @@ function Costs() {
     const [productsCost, setProductsCost] = useState(null);
     const [productType, setProductType] = useState(productTypeOptions[0].value);
     const [productColor, setProductColor] = useState(productColorOptions[0].value);
-    const user = userService?.userValue
-    const isLoggedIn = user && user.accessToken
     const [showModal, setShowModal] = useState(false);
+    const user = userService?.userValue
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (!isLoggedIn)
+        userService.checkAuthOnLoad && userService.checkAuthOnLoad();
+        if (!userService.isAuthenticated)
             return;
         productService.getAll().then(x => setProducts(x));
         productCostService.getAll().then(y => setProductsCost(y))
         setProductType(productTypeOptions[0].value);
         setProductColor(productColorOptions[0].value);
     }, []);
+
+    if (!userService.isAuthenticated) {
+        return null;
+    }
 
     // --- Novo formulário para TemperedGlassCostEntity ---
     const [form, setForm] = useState({

@@ -30,7 +30,6 @@ function login(username, password) {
     }
 
     const url = `${apiUrl}/login-v2`;
-    console.log('Login API URL:', url);
 
     return fetchWrapper.post(url, {username, password})
         .then(user => {
@@ -61,6 +60,9 @@ function logout() {
 }
 
 function checkAuthOnLoad() {
+    // Sempre recarrega o usuário do localStorage
+    const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user')) : null;
+    userSubject.next(user);
     if (!userService.isAuthenticated) {
         userService.logout();
     }

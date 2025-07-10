@@ -8,11 +8,10 @@ export default Home;
 function Home() {
     const [leads, setLeads] = useState(null)
     const navigate = useNavigate()
-    const isLoggedIn = userService?.isAuthenticated
 
     useEffect(() => {
-        userService.checkAuthOnLoad();
-        if (!isLoggedIn) {
+        userService.checkAuthOnLoad && userService.checkAuthOnLoad();
+        if (!userService.isAuthenticated) {
             navigate(`${import.meta.env.BASE_URL}account/login`);
             return;
         }
@@ -24,7 +23,11 @@ function Home() {
                 // O logout já redireciona, mas pode mostrar um aviso se quiser
                 console.error('Erro ao buscar leads:', error);
             });
-    }, [isLoggedIn, navigate]);
+    }, [navigate]);
+
+    if (!userService.isAuthenticated) {
+        return null;
+    }
 
     return (
         <div className="container py-4">
