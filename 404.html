@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <script>
-      // Recupera o path original
+      // Redireciona para /index.html#<path>
       var path = window.location.pathname + window.location.search + window.location.hash;
-      if (path !== '/') {
-        window.history.replaceState({}, '', path);
-        window.location.replace('/');
-      }
+      window.location.replace('/index.html#' + path);
     </script>
   </head>
   <body>
