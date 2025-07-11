@@ -2,8 +2,12 @@
 <html>
   <head>
     <script>
-      // Redireciona para a raiz, mas mantém o path para o React Router tratar
-      window.location.replace('/?' + window.location.pathname.slice(1) + window.location.search + window.location.hash);
+      // Recupera o path original
+      var path = window.location.pathname + window.location.search + window.location.hash;
+      if (path !== '/') {
+        window.history.replaceState({}, '', path);
+        window.location.replace('/');
+      }
     </script>
   </head>
   <body>
