@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Página não encontrada</title>
-    <meta charset="UTF-8" />
+    <script>
+      // Redireciona para a raiz, mas mantém o path para o React Router tratar
+      window.location.replace('/?' + window.location.pathname.slice(1) + window.location.search + window.location.hash);
+    </script>
   </head>
   <body>
-    <h1>404 - Página não encontrada</h1>
-    <p>A página que você procura não existe.</p>
+    <p>Redirecionando...</p>
   </body>
 </html> 
