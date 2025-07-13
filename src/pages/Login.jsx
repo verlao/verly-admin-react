@@ -9,6 +9,7 @@ export default function Login() {
     const navigate = useNavigate();
     const [apiErrorMessage, setApiErrorMessage] = useState(null);
     const errorTimeoutRef = useRef(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (userService.isAuthenticated) {
@@ -61,9 +62,33 @@ export default function Login() {
                     <input name="username" type="text" {...register('username')} className={`form-control ${errors.username ? 'is-invalid' : ''}`} />
                     <div className="invalid-feedback">{errors.username?.message}</div>
                 </div>
-                <div className="form-group mb-3">
+                <div className="form-group mb-3" style={{ position: 'relative' }}>
                     <label>Senha</label>
-                    <input name="password" type="password" {...register('password')} className={`form-control ${errors.password ? 'is-invalid' : ''}`} />
+                    <input name="password" type={showPassword ? "text" : "password"} {...register('password')} className={`form-control ${errors.password ? 'is-invalid' : ''}`} />
+                    <span
+                        onClick={() => setShowPassword((v) => !v)}
+                        style={{
+                            position: 'absolute',
+                            right: 12,
+                            top: 38,
+                            cursor: 'pointer',
+                            fontSize: 20,
+                            color: '#888',
+                            width: 24,
+                            height: 24,
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                        title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                        {showPassword ? (
+                            // Olho fechado (minimalista)
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C7 19 2.73 15.11 1 12c.74-1.32 2.1-3.29 4.06-5.06M9.5 9.5a3 3 0 0 1 4.24 4.24M3 3l18 18" /><path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" /></svg>
+                        ) : (
+                            // Olho aberto (minimalista)
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="12" rx="10" ry="6" /><circle cx="12" cy="12" r="3" /></svg>
+                        )}
+                    </span>
                     <div className="invalid-feedback">{errors.password?.message}</div>
                 </div>
                 {(apiErrorMessage || errors.apiError) && (

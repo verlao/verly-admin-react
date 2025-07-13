@@ -17,7 +17,7 @@ export default function Nav() {
     if (!user) return null;
 
     return (
-        <nav className="navbar navbar-expand navbar-dark bg-dark">
+        <nav className="navbar navbar-expand navbar-dark bg-dark" style={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 1030 }}>
             <div className="navbar-nav">
                 <NavLink href="/leads" exact className="nav-item nav-link">Inicio</NavLink>
                 <NavLink href="/customers" className="nav-item nav-link">Clientes</NavLink>
