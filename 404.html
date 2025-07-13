@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8" />
     <script>
-      // Redireciona para /index.html#<path>
-      var path = window.location.pathname + window.location.search + window.location.hash;
-      window.location.replace('/index.html#' + path);
+      // Redireciona para a raiz, mas mantém o path para o React Router tratar
+      window.location.replace('/?' + window.location.pathname.slice(1) + window.location.search + window.location.hash);
     </script>
   </head>
   <body>
