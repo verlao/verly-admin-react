@@ -9,11 +9,11 @@ const userSubject = new BehaviorSubject(
 export const userService = {
     user: userSubject.asObservable(),
     get userValue () {
-        return userSubject.value },
+        return typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user')) : userSubject.value;
+    },
     get isAuthenticated() {
         const user = this.userValue;
         if (!user) return false;
-        
         if (user.expiresAt) {
             return new Date(user.expiresAt) > new Date();
         }
@@ -21,7 +21,8 @@ export const userService = {
     },
     login,
     logout,
-    checkAuthOnLoad
+    checkAuthOnLoad,
+    setUserFromLocalStorage
 };
 
 function login(username, password) {
@@ -66,4 +67,9 @@ function checkAuthOnLoad() {
     if (!userService.isAuthenticated) {
         userService.logout();
     }
+}
+
+function setUserFromLocalStorage() {
+    const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user')) : null;
+    userSubject.next(user);
 }

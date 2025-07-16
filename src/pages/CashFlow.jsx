@@ -55,13 +55,14 @@ function CashFlow() {
             return;
         }
         try {
-            const userPerson = userService?.userValue?.name || '';
+            const userPerson = (typeof localStorage !== 'undefined' && JSON.parse(localStorage.getItem('user'))?.username) || '';
             const data = {
                 ...form,
                 type: 'ENTRADA',
                 cash: parseFloat(form.cash),
                 person: userPerson
             };
+            console.log('Payload ENTRADA:', data);
             await cashFlowService.create(data);
             showFeedbackModal('Sucesso', 'Entrada adicionada com sucesso!');
             setForm({ cash: '', description: '', orderId: '', type: '' });
@@ -78,13 +79,14 @@ function CashFlow() {
             return;
         }
         try {
-            const userPerson = userService?.userValue?.name || '';
+            const userPerson = (typeof localStorage !== 'undefined' && JSON.parse(localStorage.getItem('user'))?.username) || '';
             const data = {
                 ...form,
                 type: 'SAIDA',
                 cash: -Math.abs(parseFloat(form.cash)),
                 person: userPerson
             };
+            console.log('Payload SAIDA:', data);
             await cashFlowService.create(data);
             showFeedbackModal('Sucesso', 'Saída adicionada com sucesso!');
             setForm({ cash: '', description: '', orderId: '', type: '' });
@@ -110,6 +112,17 @@ function CashFlow() {
     const months = [
         {value:"1", label:"Janeiro",
     }]
+
+    // Função para marcar deleted como true e atualizar no backend
+    async function handleSoftDelete(item) {
+        try {
+            await cashFlowService.delete(item.id);
+            const updatedCashFlow = await cashFlowService.getAll();
+            setCashFlowData(updatedCashFlow);
+        } catch (error) {
+            alert('Erro ao marcar como deletado.');
+        }
+    }
 
     return (
         <div className="container py-4">
@@ -236,10 +249,81 @@ function CashFlow() {
                             </div>
                         </div>
                     ) : null}
+
+                    {/* Tabela de lançamentos */}
+                    <h3 className="fw-bold text-center mt-5 mb-3">Lançamentos</h3>
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered align-middle">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Pedido</th>
+                                    <th>Pessoa</th>
+                                    <th>Tipo</th>
+                                    <th>Data de Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {cashFlowData?.cashList && cashFlowData.cashList.length > 0 ? (
+                                    cashFlowData.cashList.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td>{item.description}</td>
+                                            <td>{typeof item.cash === 'number' ? `R$ ${item.cash.toFixed(2)}` : ''}</td>
+                                            <td>{item.orderId || '-'}</td>
+                                            <td>{item.person || '-'}</td>
+                                            <td>{item.type || '-'}</td>
+                                            <td>{item.createdDate ? formatDateTime(item.createdDate) : '-'}</td>
+                                            <td>
+                                                {item.deleted !== true && (
+                                                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleSoftDelete(item)}>
+                                                        Deletar
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={7} className="text-center text-muted">Nenhum lançamento encontrado.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             {/* ...restante da tabela de lançamentos... */}
         </div>
     );
+} 
+
+// Adicionar função utilitária para parse correto da data
+function formatDateTime(dateValue) {
+    if (!dateValue) return '';
+    let date;
+    // Caso venha como array [ano, mês, dia, hora, minuto, segundo, nanos]
+    if (Array.isArray(dateValue) && dateValue.length >= 5) {
+        const [year, month, day, hour, minute] = dateValue;
+        date = new Date(year, month - 1, day, hour, minute);
+    } else if (typeof dateValue === 'object' && dateValue.year) {
+        const { year, month, day, hour, minute } = dateValue;
+        date = new Date(year, month - 1, day, hour, minute);
+    } else if (typeof dateValue === 'string') {
+        const safeString = dateValue.replace(' ', 'T');
+        date = new Date(safeString);
+        if (isNaN(date.getTime())) return dateValue;
+    } else {
+        return String(dateValue);
+    }
+    // Formatar para dd-MM-yyyy HH:mm
+    const pad = n => n.toString().padStart(2, '0');
+    const day = pad(date.getDate());
+    const month = pad(date.getMonth() + 1);
+    const year = date.getFullYear();
+    const hour = pad(date.getHours());
+    const minute = pad(date.getMinutes());
+    return `${day}-${month}-${year} ${hour}:${minute}`;
 } 
