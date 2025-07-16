@@ -23,8 +23,8 @@ function create(params) {
     return fetchWrapper.post(baseUrl, params);
 }
 
-function update(id, params) {
-    return fetchWrapper.put(`${baseUrl}/${id}`, params);
+function update(params) {
+    return fetchWrapper.put(baseUrl, params);
 }
 
 // prefixed with underscored because delete is a reserved word in javascript
