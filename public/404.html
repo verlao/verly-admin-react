@@ -2,8 +2,9 @@
 <html>
   <head>
     <script>
-      // Redireciona para a raiz, mas mantém o path para o React Router tratar
-      window.location.replace('/?' + window.location.pathname.slice(1) + window.location.search + window.location.hash);
+      // Redireciona para index.html com hash, para o HashRouter funcionar
+      var path = window.location.pathname + window.location.search + window.location.hash;
+      window.location.replace('/index.html#' + path);
     </script>
   </head>
   <body>

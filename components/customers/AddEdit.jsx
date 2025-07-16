@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup/dist/yup";
 import * as Yup from "yup";
 import React from "react";
@@ -16,7 +16,6 @@ function AddEdit(props) {
   const savedCustomer = props?.customer;
   const isAddMode = props.customer ? false : true;
   const navigate = useNavigate();
-  // form validation rules
   const validationSchema = Yup.object().shape({
     name: Yup.string().required("Nome precisa ser preenchido."),
     address: Yup.object().shape({
@@ -25,17 +24,14 @@ function AddEdit(props) {
       reference: Yup.string(),
     }),
     phone: Yup.object().shape({
-      one: Yup.string().required("Celular precisa ser preencido."),
+      one: Yup.string(), 
+      two: Yup.string(), 
     })
-
-
-    // complemento: Yup.string().required("Complemento precisa ser preenchido."),
-    // bairro: Yup.string().required("Bairro precisa ser preenchido."),
+  
   });
   const formOptions = { resolver: yupResolver(validationSchema) };
 
-  // get functions to build form with useForm() hook
-  const { register, setValue, getValues, handleSubmit, reset, formState } = useForm(formOptions);
+  const { register, setValue, getValues, handleSubmit, reset, formState, control } = useForm(formOptions);
   const { errors } = formState;
   const [customer, setCustomer] = useState({})
   const [isLoadingCep, setIsLoadingCep] = useState(false)
@@ -72,9 +68,9 @@ function AddEdit(props) {
   }
   async function createUser(data) {
     try {
-      data.cpf = data.cpf.replace(/[^0-9]/g, "");
-      data.phone.one = data.phone.one.replace(/[^0-9]/g, "");
-      data.phone.two = data.phone.two.replace(/[^0-9]/g, "");
+      data.cpf = (data.cpf || "").replace(/[^0-9]/g, "");
+      data.phone.one = (data.phone.one || "").replace(/[^0-9]/g, "");
+      data.phone.two = (data.phone.two || "").replace(/[^0-9]/g, "");
       await customerService.create(data);
       reset();
       alertService.success("Cliente adicionado", { keepAfterRouteChange: true });
@@ -98,33 +94,40 @@ function AddEdit(props) {
 
   useEffect(() => {
     if (!isAddMode && props.customer) {
-      // Formatar CPF para exibição
-      const formattedCpf = props.customer.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-      
-      // Formatar telefones para exibição
-      const formatPhone = (phone) => {
-        if (!phone) return '';
-        const cleanPhone = phone.replace(/\D/g, '');
-        if (cleanPhone.length === 11) {
-          return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1)$2-$3');
+      // Fallback seguro para phone
+      let phoneObj = { one: '', two: '' };
+      if (typeof props.customer.phone === 'string') {
+        phoneObj.one = props.customer.phone;
+      } else if (typeof props.customer.phone === 'object' && props.customer.phone !== null) {
+        phoneObj = {
+          one: props.customer.phone.one || '',
+          two: props.customer.phone.two || ''
+        };
+      }
+      // Formatar CPF para exibição, se existir
+      const formattedCpf = props.customer.cpf
+        ? props.customer.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : '';
+      reset({
+        name: props.customer.name || '',
+        cpf: formattedCpf,
+        address: {
+          cep: props.customer.address?.cep || '',
+          logradouro: props.customer.address?.logradouro || '',
+          complemento: props.customer.address?.complemento || '',
+          bairro: props.customer.address?.bairro || '',
+          localidade: props.customer.address?.localidade || '',
+          number: props.customer.address?.number || '',
+          reference: props.customer.address?.reference || ''
+        },
+        phone: {
+          one: phoneObj.one,
+          two: phoneObj.two
         }
-        return phone;
-      };
-
-      setValue('name', props.customer.name || '');
-      setValue('cpf', formattedCpf);
-      setValue('address.cep', props.customer.address?.cep || '');
-      setValue('address.logradouro', props.customer.address?.logradouro || '');
-      setValue('address.complemento', props.customer.address?.complemento || '');
-      setValue('address.bairro', props.customer.address?.bairro || '');
-      setValue('address.localidade', props.customer.address?.localidade || '');
-      setValue('address.number', props.customer.address?.number || '');
-      setValue('address.reference', props.customer.address?.reference || '');
-      setValue('phone.one', formatPhone(props.customer.phone?.one));
-      setValue('phone.two', formatPhone(props.customer.phone?.two));
+      });
       setCustomer(props.customer);
     }
-  }, [isAddMode, props.customer, setValue]);
+  }, [isAddMode, props.customer, reset]);
 
   return (
     <div className="container py-4">
@@ -145,52 +148,75 @@ function AddEdit(props) {
             </div>
             <div className="col-12 col-md-6">
               <label>CPF</label>
-              <IMaskInput
-                mask="000.000.000-00"
+              <Controller
                 name="cpf"
-                type="text"
-                autoComplete="disabled"
-                {...register("cpf")}
-                className={`form-control form-control-lg ${errors.cpf ? "is-invalid" : ""}`}
+                control={control}
+                render={({ field }) => (
+                  <IMaskInput
+                    {...field}
+                    mask="000.000.000-00"
+                    type="text"
+                    autoComplete="disabled"
+                    className={`form-control form-control-lg ${errors.cpf ? "is-invalid" : ""}`}
+                  />
+                )}
               />
               <div className="invalid-feedback">{errors.cpf?.message}</div>
             </div>
             <div className="col-12 col-md-6">
               <label>Celular</label>
-              <IMaskInput
-                mask="(00)00000-0000"
-                name="phoneOne"
-                type="text"
-                autoComplete="disabled"
-                {...register("phone.one")}
-                className={`form-control form-control-lg ${errors.phone?.one ? "is-invalid" : ""}`}
+              <Controller
+                name="phone.one"
+                control={control}
+                render={({ field }) => (
+                  <IMaskInput
+                    {...field}
+                    mask="(00)00000-0000"
+                    type="text"
+                    autoComplete="disabled"
+                    className={`form-control form-control-lg ${errors.phone?.one ? "is-invalid" : ""}`}
+                  />
+                )}
               />
               <div className="invalid-feedback">{errors.phone?.one?.message}</div>
             </div>
             <div className="col-12 col-md-6">
               <label>Telefone</label>
-              <IMaskInput
-                mask="(00)00000-0000"
+              <Controller
                 name="phone.two"
-                type="text"
-                autoComplete="disabled"
-                {...register("phone.two")}
-                className={`form-control form-control-lg ${errors.phoneTwo ? "is-invalid" : ""}`}
+                control={control}
+                render={({ field }) => (
+                  <IMaskInput
+                    {...field}
+                    mask="(00)00000-0000"
+                    type="text"
+                    autoComplete="disabled"
+                    className={`form-control form-control-lg ${errors.phoneTwo ? "is-invalid" : ""}`}
+                  />
+                )}
               />
               <div className="invalid-feedback">{errors.phoneTwo?.message}</div>
             </div>
             <div className="col-12 col-md-6">
               <label>Cep</label>
               <div className="position-relative">
-                <IMaskInput
-                  mask="00000-000"
-                  name="cep"
-                  type="text"
-                  autoComplete="disabled"
-                  onBlurCapture={() => findAddress(getValues("address.cep"))}
-                  onComplete={(value) => findAddress(value)}
-                  {...register("address.cep")}
-                  className={`form-control form-control-lg ${errors.cep ? "is-invalid" : ""}`}
+                <Controller
+                  name="address.cep"
+                  control={control}
+                  render={({ field }) => (
+                    <IMaskInput
+                      {...field}
+                      mask="00000-000"
+                      type="text"
+                      autoComplete="disabled"
+                      value={field.value || ''}
+                      onAccept={val => field.onChange(val)}
+                      onBlurCapture={() => findAddress(getValues("address.cep"))}
+                      onComplete={value => findAddress(value)}
+                      className={`form-control form-control-lg ${errors.cep ? "is-invalid" : ""}`}
+                      style={{ width: '100%', maxWidth: 250, letterSpacing: 2 }}
+                    />
+                  )}
                 />
                 {isLoadingCep && (
                   <div className="position-absolute top-50 end-0 translate-middle-y pe-3">
@@ -213,17 +239,6 @@ function AddEdit(props) {
               />
               <div className="invalid-feedback">{errors.address?.logradouro?.message}</div>
             </div>
-            <div className="col-12 col-md-6">
-              <label>Complemento</label>
-              <input
-                name="complemento"
-                type="text"
-                autoComplete="disabled"
-                {...register("address.complemento")}
-                className={`form-control form-control-lg ${errors.complemento ? "is-invalid" : ""}`}
-              />
-              <div className="invalid-feedback">{errors.complemento?.message}</div>
-            </div>
             <div className="col-12 col-md-3">
               <label>Número</label>
               <input
@@ -234,6 +249,17 @@ function AddEdit(props) {
                 className={`form-control form-control-lg ${errors.address?.number ? "is-invalid" : ""}`}
               />
               <div className="invalid-feedback">{errors.address?.number?.message}</div>
+            </div>
+            <div className="col-12 col-md-6">
+              <label>Complemento</label>
+              <input
+                name="complemento"
+                type="text"
+                autoComplete="disabled"
+                {...register("address.complemento")}
+                className={`form-control form-control-lg ${errors.complemento ? "is-invalid" : ""}`}
+              />
+              <div className="invalid-feedback">{errors.complemento?.message}</div>
             </div>
             <div className="col-12 col-md-3">
               <label>Referência</label>
@@ -278,14 +304,6 @@ function AddEdit(props) {
                   <span className="spinner-border spinner-border-sm mr-1"></span>
                 )}
                 Salvar
-              </button>
-              <button
-                onClick={() => reset(formOptions.defaultValues)}
-                type="button"
-                disabled={formState.isSubmitting}
-                className="btn btn-warning btn-lg w-100 mb-2 mb-md-0"
-              >
-                Limpar
               </button>
               <Link href="/customers" className="btn btn-secondary btn-lg w-100">
                 Voltar

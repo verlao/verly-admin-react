@@ -66,13 +66,13 @@ function Products() {
                 <table className="table table-striped">
                     <thead>
                         <tr>
-                            <th>Categoria</th>
+                            {/* <th>Categoria</th> */}
                             <th>Tipo</th>
                             <th>Folhas</th>
                             <th>Largura</th>
                             <th>Altura</th>
                             <th>Cor</th>
-                            <th>Medida</th>
+                            {/* <th>Medida</th> */}
                             <th>Custo</th>
                             <th>Preço À Vista</th>
                             <th>Lucro</th>
@@ -85,17 +85,17 @@ function Products() {
                                 (productColor ? product.color === productColor : true)
                             )?.map(product => 
                                 <tr key={product.key}>
-                                    <td>{product.category}</td>
+                                    {/* <td>{product.category}</td> */}
                                     <td>{product.type}</td>
                                     <td>{product.sheets}</td>
                                     <td>{product.width + 'cm'}</td>
                                     <td>{product.height + 'cm'}</td>
                                     <td>{product.color}</td>
-                                    <td>{product.measure + 'm²'}</td>
+                                    {/* <td>{product.measure + 'm²'}</td> */}
                                     <td>{'R$ ' + product.cost}</td>
                                     <OverlayTrigger
-                                        container={this}
-                                        trigger={["hover", "focus"]}
+                                        trigger={["hover", "focus", "click"]}
+                                        rootClose
                                         placement="right"
                                         overlay={
                                         <Popover id="popover-installments" title="Parcelamento">
@@ -116,7 +116,7 @@ function Products() {
                                         </Popover>
                                         }
                                     >
-                                    <td>{'R$ ' + product.price}</td>
+                                    <td style={{ cursor: 'pointer' }}>{'R$ ' + product.price}</td>
                                     </OverlayTrigger>
                                     <td>{'R$ ' + product.profit}</td>
                                     <td>{product.kit}</td>
